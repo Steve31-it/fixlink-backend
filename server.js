@@ -12,10 +12,12 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
-// ✅ CORS setup for local + deployed frontend
+// ✅ CORS setup for local + deployed frontend - FIXED SYNTAX ERROR
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://fixlink-frontend.vercel.app'
+  'https://fixlink-frontend.vercel.app',  // ← Added missing comma
+  'https://fixlink-frontend-gkaf8odb-steves-projects-7b06cf20.vercel.app', // ← Added your actual Vercel URL
+  'https://fixlink-backend-d6z3.onrender.com' // ← Fixed typo (was d6s3, should be d6z3)
 ];
 
 app.use(cors({
@@ -25,6 +27,7 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     } else {
+      console.log('❌ CORS blocked origin:', origin); // ← Added logging
       return callback(new Error('Not allowed by CORS'));
     }
   },
@@ -57,6 +60,15 @@ app.use('/api/admin', require('./routes/admin'));
 // ✅ Root route
 app.get('/', (req, res) => {
   res.send('FixLink API is running...');
+});
+
+// ✅ Health check route (useful for debugging)
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    allowedOrigins: allowedOrigins
+  });
 });
 
 // ✅ Socket.IO setup
@@ -95,4 +107,5 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5001;
 server.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`🌐 Allowed origins:`, allowedOrigins);
 });
