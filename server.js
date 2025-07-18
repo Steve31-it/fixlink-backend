@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -13,17 +12,26 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
-// ✅ Socket.IO setup with CORS for local frontend
-const io = socketIo(server, {
-  cors: {
-    origin: 'http://localhost:5173',
-    methods: ['GET', 'POST'],
-    credentials: true
-  }
-});
+// ✅ CORS setup for local + deployed frontend
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://fixlink-frontend.vercel.app'
+];
 
-// ✅ Middleware
-app.use(cors());
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like Postman or mobile apps)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
+// ✅ Express middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -46,12 +54,20 @@ app.use('/api/services', require('./routes/services'));
 app.use('/api/chat', require('./routes/chat'));
 app.use('/api/admin', require('./routes/admin'));
 
-// ✅ Handle root URL (for testing connection)
+// ✅ Root route
 app.get('/', (req, res) => {
   res.send('FixLink API is running...');
 });
 
-// ✅ Socket.IO logic
+// ✅ Socket.IO setup
+const io = socketIo(server, {
+  cors: {
+    origin: allowedOrigins,
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
+});
+
 io.on('connection', (socket) => {
   console.log('⚡ User connected:', socket.id);
 
