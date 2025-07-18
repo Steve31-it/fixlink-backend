@@ -12,12 +12,12 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
-// ✅ CORS setup for local + deployed frontend - FIXED SYNTAX ERROR
+// ✅ CORS setup - CORRECTED URL
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://fixlink-frontend.vercel.app',  // ← Added missing comma
-  'https://fixlink-frontend-gkaf8odb-steves-projects-7b06cf20.vercel.app', // ← Added your actual Vercel URL
-  'https://fixlink-backend-d6z3.onrender.com' // ← Fixed typo (was d6s3, should be d6z3)
+  'https://fixlink-frontend.vercel.app',
+  'https://fixlink-frontend-pfaf8o6gd-steves-projects-7b06cf20.vercel.app', // ← FIXED: pfaf8o6gd (not gkaf8odb)
+  'https://fixlink-backend-d6z3.onrender.com'
 ];
 
 app.use(cors({
@@ -25,9 +25,11 @@ app.use(cors({
     // Allow requests with no origin (like Postman or mobile apps)
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) {
+      console.log('✅ CORS allowed origin:', origin);
       return callback(null, true);
     } else {
-      console.log('❌ CORS blocked origin:', origin); // ← Added logging
+      console.log('❌ CORS blocked origin:', origin);
+      console.log('🔍 Allowed origins:', allowedOrigins);
       return callback(new Error('Not allowed by CORS'));
     }
   },
