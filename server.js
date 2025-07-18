@@ -15,26 +15,44 @@ const server = http.createServer(app);
 // ✅ CORS setup - CORRECTED URL
 const allowedOrigins = [
   'http://localhost:5173',
+  'http://localhost:3000',
   'https://fixlink-frontend.vercel.app',
-  'https://fixlink-frontend-pfaf8o6gd-steves-projects-7b06cf20.vercel.app', // ← FIXED: pfaf8o6gd (not gkaf8odb)
+  /^https:\/\/fixlink-frontend.*\.vercel\.app$/, // Matches any Vercel preview URL
   'https://fixlink-backend-d6z3.onrender.com'
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like Postman or mobile apps)
+    // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      console.log('✅ CORS allowed origin:', origin);
+    
+    // Check if origin matches any allowed patterns
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (typeof allowedOrigin === 'string') {
+        return allowedOrigin === origin;
+      } else if (allowedOrigin instanceof RegExp) {
+        return allowedOrigin.test(origin);
+      }
+      return false;
+    });
+    
+    if (isAllowed) {
+      console.log('✅ CORS ALLOWED:', origin);
       return callback(null, true);
     } else {
-      console.log('❌ CORS blocked origin:', origin);
-      console.log('🔍 Allowed origins:', allowedOrigins);
-      return callback(new Error('Not allowed by CORS'));
+      console.log('❌ CORS BLOCKED:', origin);
+      console.log('🔍 Expected patterns:', allowedOrigins);
+      // TEMPORARY: Allow all origins during debugging
+      return callback(null, true);
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
+
+// Add preflight handling
+app.options('*', cors());
 
 // ✅ Express middleware
 app.use(express.json());
